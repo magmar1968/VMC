@@ -108,7 +108,7 @@ module VMC
         call set_HS_parameters(params%alpha,params%Rv,params%k0,params%a_osc)
        
        
-        MAX_RADIUS      = 2*params%a_osc !setting the max distance from the center
+        MAX_RADIUS      = 4*params%a_osc !setting the max distance from the center
         densProfileStep = MAX_RADIUS/NdensProfileSteps
         density_profile = 0
         sigma           = sqrt(2*h2over2m*dt)
@@ -163,6 +163,9 @@ module VMC
         do i_atom = 1, Natoms
             radius = norm2(R(i_atom,:)) 
             i_step = int(radius/densProfileStep)
+            if (i_step > NdensProfileSteps) then 
+                print *, "OUTTTT"
+            end if 
             ! possible source of segsev because I'm too lazy 
             ! to implement a better code that adapt the array 
             ! size to the furthest particle 
