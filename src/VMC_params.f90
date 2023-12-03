@@ -133,6 +133,7 @@ subroutine print_parameters()
     print *, "   - Number Stability steps: ", NStabSteps
     print *, "   - dt                    : ", dt
     print *, "   - Atoms Number          : ", Natoms
+    print *, "   - Number step dens prof : ", NdensProfileSteps
     print *, " FLAGS:                                              "
     print *, "   - INITIAL CONFIGURATION : ", PRINT_INITIAL_CONFIGURATION
     print *, "   - FINAL CONFIGUTATION   : ", PRINT_FINAL_CONFIGURATION
