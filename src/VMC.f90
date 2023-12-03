@@ -13,7 +13,7 @@ module VMC
     integer                             :: NEW,OLD,Nacceptances
     real*8                              :: MAX_RADIUS
     real*8                              :: E_acc,E2_acc
-    integer,allocatable,dimension(:)    :: density_profile
+    real*8,allocatable,dimension(:)     :: density_profile
     real*8,allocatable,dimension(:,:,:) :: walker
     real*8,dimension(2)                 :: TWF                !to store Trial WF values
 
@@ -159,6 +159,10 @@ module VMC
         real*8,intent(in),dimension(Natoms,DIM) :: R
         real*8  :: radius
         integer :: i_atom,i_step
+
+        if(PRINT_DENSITY_PROFILE .eqv. .FALSE.) then 
+            return 
+        end if 
         
         do i_atom = 1, Natoms
             radius = norm2(R(i_atom,:)) 

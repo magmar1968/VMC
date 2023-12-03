@@ -76,7 +76,7 @@ module VMC_print
     subroutine print_density_profile_toFile(density_profile)
         use VMC_parameters
         implicit none
-        integer,dimension(NdensProfileSteps) :: density_profile
+        real*8,dimension(NdensProfileSteps) :: density_profile
         integer :: i_step 
         real*8 :: rmin,rmax,area,dens
         character(MAX_FILENAME_LENGHT) :: filename 
