@@ -60,7 +60,7 @@ module VMC_print
         if (FirstTime) then 
             filename = trim(outfile_path)//trim(energy_evolution_filename)
             open(FID,file=filename,status="replace")
-            write(FID,*) "step,E,E^2,epot,ekin,ekinfor"
+            write(FID,"(A)") "step,E,E^2,epot,ekin,ekinfor"
             FirstTime = .FALSE. 
             close(FID)
         end if
@@ -70,4 +70,35 @@ module VMC_print
         close(FID)
     end subroutine
 
+    !##################################################
+    !#           Print Density Profile to File        #
+    !##################################################
+    subroutine print_density_profile_toFile(density_profile)
+        use VMC_parameters
+        implicit none
+        integer,dimension(NdensProfileSteps) :: density_profile
+        integer :: i_step 
+        real*8 :: rmin,rmax,area,dens
+        character(MAX_FILENAME_LENGHT) :: filename 
+        
+        filename= trim(outfile_path)//trim(dens_profile_filename)
+
+        open(FID,file=filename,status="replace")
+        write(FID,"(A)")"rmin,rmax,dens"
+
+        !normalize for number of evaluations
+        density_profile = density_profile/(NMCsteps)
+        !normalize for number of particles
+        density_profile = density_profile/Natoms
+        !normalize for area and printing 
+        do i_step = 1, NdensProfileSteps
+            rmin = (i_step-1)*densProfileStep
+            rmax = (i_step)  *densProfileStep
+            area = PI*(rmax**2-rmin**2)
+            dens = density_profile(i_step)/area
+
+            write(FID,*) rmin,rmax,dens
+        end do 
+
+    end subroutine
 end module 
