@@ -51,7 +51,7 @@ module iofile
         module procedure read_data_r
         module procedure read_data_i
         module procedure read_data_l
-        module procedure read_data_c
+        module procedure read_data_s
     end interface
     
 !###################################################################
@@ -61,6 +61,9 @@ module iofile
     !                    Open Inputfile
     !####################################################
     subroutine io_open(input_filename)
+        Use, intrinsic :: iso_fortran_env, Only : iostat_end
+        implicit none
+        
         character(*), intent(in) :: input_filename
         filename = input_filename
         open(FID,file=input_filename,status="old",action= "read")
@@ -68,8 +71,16 @@ module iofile
         IERROR = 0
         N_lines = 0
         do while (IERROR == 0)
-            N_lines = N_lines + 1
-            read(FID,*,iostat=IERROR) 
+            Select Case(IERROR)
+            Case(0)
+                N_lines = N_lines + 1
+                read(FID,*,iostat=IERROR)
+            Case(iostat_end) 
+                exit
+            Case Default
+                print *, "IERROR: ", IERROR
+                print *, ioerrmsg
+            End Select
         end do  
         close(FID)
 
@@ -240,18 +251,15 @@ module iofile
     end subroutine
 
     !####################################################
-    !#                 Read Logical Data                #
+    !#                 Read String Data                #
     !####################################################
-    subroutine read_data_c(dataname, outdata)
+    subroutine read_data_s(dataname, outdata)
         use strings, only:parse,value,compact
         Use, intrinsic :: iso_fortran_env, Only : iostat_end
         implicit none
         
         character(*), intent(in) :: dataname
         character(*),  intent(out) :: outdata
-        character,parameter      :: TRUE = "T"
-        character,parameter      :: FALSE = "F" 
-
 
         open(FID,file=filename,status="old",action= "read")
         IERROR = 0

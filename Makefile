@@ -15,7 +15,8 @@ LIB    :=
 OTHER :=  src/prec src/string src/iofile \
 		src/random \
 		src/HS_puregas \
-		# src/params \
+		src/VMC_params \
+		src/VMC_print \
 		src/VMC \
 
 PROGS := src/twf_param_opt 
