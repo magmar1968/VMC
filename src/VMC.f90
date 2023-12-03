@@ -13,7 +13,7 @@ module VMC
     integer                             :: NEW,OLD,Nacceptances
     real*8                              :: MAX_RADIUS
     real*8                              :: E_acc,E2_acc
-    real*8,allocatable,dimension(:)     :: density_profile
+    integer,allocatable,dimension(:)    :: density_profile
     real*8,allocatable,dimension(:,:,:) :: walker
     real*8,dimension(2)                 :: TWF                !to store Trial WF values
 
@@ -38,7 +38,7 @@ module VMC
     !#           Run Variational MC Simulation          #
     !####################################################    
     subroutine run_VMC(params,results)
-        use VMC_print,only:print_inital_conf_toFile,print_final_conf_toFile
+        use VMC_print
         use VMC_parameters
         use HS_puregas
         implicit none
@@ -84,6 +84,10 @@ module VMC
             call print_final_conf_toFile(walker(:,:,OLD))
         end if 
 
+        if(PRINT_DENSITY_PROFILE) then 
+            call print_density_profile_toFile(density_profile)
+        end if 
+
         deallocate(walker);deallocate(density_profile)
     end subroutine 
     !################################################################
@@ -104,13 +108,14 @@ module VMC
         call set_HS_parameters(params%alpha,params%Rv,params%k0,params%a_osc)
        
        
-        MAX_RADIUS      = 4*params%a_osc !setting the max distance from the center
+        MAX_RADIUS      = 2*params%a_osc !setting the max distance from the center
         densProfileStep = MAX_RADIUS/NdensProfileSteps
+        density_profile = 0
         sigma           = sqrt(2*h2over2m*dt)
         Nacceptances    = 0;
         E_acc           = 0.
         E2_acc          = 0.
-        NEW=2;OLD=1            !init swappers
+        NEW = 2; OLD = 1  !init swappers
 
         call gen_initial_configuration(walker(:,:,OLD))
         if (PRINT_INITIAL_CONFIGURATION) then 
@@ -152,14 +157,14 @@ module VMC
         use HS_puregas
         implicit none
         real*8,intent(in),dimension(Natoms,DIM) :: R
-        real*8 :: delta_r,radius
+        real*8  :: radius
         integer :: i_atom,i_step
         
         do i_atom = 1, Natoms
             radius = norm2(R(i_atom,:)) 
-            i_step = int(radius/delta_r)
-            !possible source of segsev because I'm too lazy 
-            !to implement a better code that adapt the array 
+            i_step = int(radius/densProfileStep)
+            ! possible source of segsev because I'm too lazy 
+            ! to implement a better code that adapt the array 
             ! size to the furthest particle 
             density_profile(i_step) = density_profile(i_step) + 1
         end do
