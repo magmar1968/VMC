@@ -99,6 +99,6 @@ module VMC_print
 
             write(FID,*) rmin,rmax,dens
         end do 
-
+        close(FID)
     end subroutine
 end module 
