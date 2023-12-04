@@ -26,9 +26,10 @@ module VMC_print
         write(FID,"(A)") "step,r,corr,corrprime,corrdoubleprime,harm,harmprime,harmdoubleprime"
         do i_step=1,TWFNPartitions
             r = (i_step-1)*rstep
-            write(FID,*) i_step,r, &
-                         TWF_corr(1,i_step),TWF_corr(2,i_step),TWF_corr(3,i_step), &
-                         TWF_harm(1,i_step),TWF_harm(2,i_step),TWF_harm(3,i_step)
+            write(FID,*) i_step,",",r,",", &
+                         TWF_corr(1,i_step),",",TWF_corr(2,i_step),",",&
+                         TWF_corr(3,i_step),",",TWF_harm(1,i_step),",",&
+                         TWF_harm(2,i_step),",",TWF_harm(3,i_step)
         end do 
         
         close(FID)
@@ -95,7 +96,8 @@ module VMC_print
         end if
 
         open(FID,file=filename,access="append") 
-        write(FID,*) MC_step,E,E**2,Epot,Ekin,Ekinfor
+        write(FID,*) MC_step,",",E,",",E**2,",",Epot,",",&
+                     Ekin,",",Ekinfor
         close(FID)
     end subroutine
 
@@ -126,7 +128,7 @@ module VMC_print
             area = PI*(rmax**2-rmin**2)
             dens = density_profile(i_step)/area
 
-            write(FID,*) rmin,rmax,dens
+            write(FID,*) rmin,",",rmax,",",dens
         end do 
         close(FID)
     end subroutine
