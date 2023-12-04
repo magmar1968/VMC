@@ -26,7 +26,6 @@ module VMC_parameters
     integer           :: NThermSteps  !number of thermalization steps       
     integer           :: NStabSteps   !number of stability steps    
     real*8            :: dt   
-    real*8            :: D = 1        !unity of energy 
     real*8            :: sigma        !diffusion variance    
     !}
 
@@ -40,12 +39,17 @@ module VMC_parameters
     !{
     integer           :: NdensProfileSteps
     real*8            :: densProfileStep
+    integer           :: TWFNPartitions
     !}
+
+    !
 
 
     !dimensional parameter
     !{
     real*8, parameter :: h2over2m = 1 !set to one
+    real*8            :: D = 1        !unity of energy 
+    ! real*8, parameter :: a_osc !for future use  
     !}
 
     !verbosity parameters
@@ -86,6 +90,7 @@ subroutine input(filename)
     call read_data("NMCsteps",NMCsteps)
     call read_data("NTsteps",NThermSteps)
     call read_data("NStabSteps",NStabSteps)
+    call read_data("TWFNPartitions", TWFNPartitions)
     call read_data("dt",dt)
 
     !read system parameters
@@ -134,6 +139,7 @@ subroutine print_parameters()
     print *, "   - dt                    : ", dt
     print *, "   - Atoms Number          : ", Natoms
     print *, "   - Number step dens prof : ", NdensProfileSteps
+    print *, "   - TWF discret. N ofsteps: ", TWFNPartitions
     print *, " FLAGS:                                              "
     print *, "   - INITIAL CONFIGURATION : ", PRINT_INITIAL_CONFIGURATION
     print *, "   - FINAL CONFIGUTATION   : ", PRINT_FINAL_CONFIGURATION

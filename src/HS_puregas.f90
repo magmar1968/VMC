@@ -331,11 +331,12 @@ module HS_puregas
     !####################################################
     !#           Get Trial Wave Function Terms          #
     !####################################################
-    subroutine get_TWF_terms(TWF_corr,TWF_harm,Npartitions)
+    subroutine get_TWF_terms(TWF_corr,TWF_harm,rstep,Npartitions)
         implicit none
         integer,intent(in) :: Npartitions
         real*8,intent(out),dimension(3,Npartitions) :: TWF_corr,TWF_harm
-        real*8  :: r,rstep
+        real*8,intent(out) :: rstep
+        real*8  :: r
         integer :: i_step
 
         rstep = 4.*params%a_osc/Npartitions

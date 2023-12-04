@@ -6,6 +6,35 @@ module VMC_print
 
     contains
 
+    !####################################################
+    !#               Print TWF to File                  #
+    !####################################################
+    subroutine print_TWF_tofile()
+        use HS_puregas,Only:get_TWF_terms
+        implicit none
+        integer,parameter :: NFUNC = 3 !func,funcprime,funcdoubleprime
+        real*8, dimension(NFUNC,TWFNPartitions) :: TWF_corr,TWF_harm
+        real*8  :: rstep,r
+        integer :: i_step
+        character(MAX_FILENAME_LENGHT) :: filename
+        filename = trim(outfile_path)//trim(twf_filename)
+        
+        call get_TWF_terms(TWF_corr=TWF_corr,TWF_harm=TWF_harm,rstep=rstep,&
+                           Npartitions=TWFNPartitions)
+
+        open(FID,file=filename,status="replace")
+        write(FID,"(A)") "step,r,corr,corrprime,corrdoubleprime,harm,harmprime,harmdoubleprime"
+        do i_step=1,TWFNPartitions
+            r = (i_step-1)*rstep
+            write(FID,*) i_step,r, &
+                         TWF_corr(1,i_step),TWF_corr(2,i_step),TWF_corr(3,i_step), &
+                         TWF_harm(1,i_step),TWF_harm(2,i_step),TWF_harm(3,i_step)
+        end do 
+        
+        close(FID)
+        
+    end subroutine
+
     
 
     !####################################################
