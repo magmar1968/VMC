@@ -109,7 +109,8 @@ module VMC
         call set_HS_parameters(params%alpha,params%Rv,params%k0,params%a_osc)
        
        
-        MAX_RADIUS      = 5*params%a_osc !setting the max distance from the center
+        !setting the max distance from the center to a reasonable ammount
+        MAX_RADIUS      = 3*params%a_osc 
         densProfileStep = MAX_RADIUS/NdensProfileSteps
         density_profile = 0
         sigma           = sqrt(2*h2over2m*dt)
@@ -160,60 +161,36 @@ module VMC
     subroutine update_density_profile(R)
         use VMC_parameters
         use HS_puregas
+        use array_utility,Only:increase_size
         implicit none
         real*8,intent(in),dimension(Natoms,DIM) :: R
-        real*8 :: radius 
-        integer :: i_atom,i_step
+        real*8     :: radius 
+        integer    :: i_atom,i_step
+        integer    :: Nenlarging,new_size
 
         if(PRINT_DENSITY_PROFILE .eqv. .FALSE.) then 
             return 
         end if 
         
-        
-
-
-
         do i_atom = 1, Natoms
             radius = norm2(R(i_atom,:)) 
 
             if (radius > MAX_RADIUS) then 
-                call increase_density_profile_size(radius)
+                Nenlarging = floor( (radius - MAX_RADIUS)/densProfileStep) + 2 
+                new_size   = size(density_profile) + Nenlarging
+                
+                call increase_size(array=density_profile, new_size=new_size)
+                
+                NdensProfileSteps = size(density_profile)
+                MAX_RADIUS        = densProfileStep*new_size
             end if 
-            i_step = int(radius/densProfileStep)
-
-            ! possible source of segsev because I'm too lazy 
-            ! to implement a better code that adapt the array 
-            ! size to the furthest particle 
+            i_step = int(radius/densProfileStep) + 1
+            if (i_step < 1 .or. i_step > NdensProfileSteps) then 
+                print*, "ERROR: i_step out of boundaries! i_step: ", i_step
+                exit
+            end if 
             density_profile(i_step) = density_profile(i_step) + 1
         end do
-    end subroutine
-
-
-    !####################################################
-    !#           Increase Density Profile Size          #
-    !####################################################
-    subroutine increase_density_profile_size(radius)
-        use VMC_parameters
-        implicit none
-        
-        real*8,intent(in) ::  radius 
-        real*8,dimension(:),allocatable :: tmp
-        integer :: Nenlarging  !number of step to add to the array
-        integer :: old_size,new_size
-
-        Nenlarging = floor( (radius - MAX_RADIUS)/densProfileStep) + 1
-        old_size = NdensProfileSteps
-        new_size = old_size + Nenlarging
-        NdensProfileSteps = new_size
-
-        !allocate enlarged temporary array
-        allocate(tmp(new_size))
-        !copy all the values to tmp
-        tmp(1:old_size) = density_profile(1:old_size)
-        !move the allocation and automatically deallocate the old array
-        call move_alloc(tmp,density_profile) 
-
-        
     end subroutine
 
 end module

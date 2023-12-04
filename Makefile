@@ -14,6 +14,7 @@ LIB    :=
 #-----------------------------------------
 OTHER :=  src/prec src/string src/iofile \
 		src/random \
+		src/arrays_utility \
 		src/HS_puregas \
 		src/VMC_params \
 		src/VMC_print \
@@ -36,8 +37,8 @@ remake: all
 
 .PHONY: debug
 debug: clean
-debug: FFLAGS += -g -W -Wall
-debug: LDFLAGS+= -g -W -Wall
+debug: FFLAGS += -g -W -Wall -fcheck=all
+debug: LDFLAGS+= -g -W -Wall -fcheck=all
 debug: all
 
 .PHONY:parallel
