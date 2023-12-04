@@ -176,7 +176,8 @@ module VMC
             radius = norm2(R(i_atom,:)) 
 
             if (radius > MAX_RADIUS) then 
-                Nenlarging = floor( (radius - MAX_RADIUS)/densProfileStep) + 2 
+                Nenlarging = floor( (radius - MAX_RADIUS)/densProfileStep)
+                Nenlarging = Nenlarging + 2 !adding some extra space 
                 new_size   = size(density_profile) + Nenlarging
                 
                 call increase_size(array=density_profile, new_size=new_size)
@@ -185,10 +186,6 @@ module VMC
                 MAX_RADIUS        = densProfileStep*new_size
             end if 
             i_step = int(radius/densProfileStep) + 1
-            if (i_step < 1 .or. i_step > NdensProfileSteps) then 
-                print*, "ERROR: i_step out of boundaries! i_step: ", i_step
-                exit
-            end if 
             density_profile(i_step) = density_profile(i_step) + 1
         end do
     end subroutine
