@@ -197,17 +197,19 @@ module HS_puregas
 
         Natoms = size(R,1); DIM = size(R,2)
         u = 0
-        do i_atom = 1, Natoms -1 
-            dist = norm2(R(i_atom,:))
-            u    = u + log(harmonic_GS(dist))
 
+        do i_atom = 1, Natoms -1 
             do j_atom = i_atom + 1, Natoms
                 dist = norm2(R(i_atom,:)-R(j_atom,:))
-                u    = u + 2*log(twobody_corr(dist))
+                u    = u + log(twobody_corr(dist))
             end do
         end do
-        dist = norm2(R(Natoms,:)) !adding the loop missing term
-        u = u + log(harmonic_GS(dist))
+
+        
+        do i_atom = 1, Natoms
+            dist = norm2(R(i_atom,:))
+            u    = u + log(harmonic_GS(dist))
+        end do 
         
         trial_WF = exp(u)
         return 
@@ -392,9 +394,10 @@ module HS_puregas
                 do i_atom = 1, Natoms !for each atom and dimension    
                     do j_dim = 1, DIM !gen position
                         gamma = gauss(sigma)
-                        R_OUT(i_atom,j_dim) = R_IN(i_atom,j_dim) + gamma 
+                        R_OUT(i_atom,j_dim) = R_IN(i_atom,j_dim) + gamma  
                     end do
-                end do 
+                end do
+
                 !check there's not hard core crossing
                 regen = check_hcore_crosses(R_OUT)
             end do

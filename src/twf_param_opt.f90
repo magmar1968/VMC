@@ -19,13 +19,11 @@ program parameters_optimization
     type(VMC_varParameters) ::  params
     type(VMC_results) :: results
     call cpu_time(T1)
-    
-
     call input("./data/inputfile.dat")
     params = VMC_varParameters(Rv=20,&
                             alpha=36.0,&
                             k0=0.010459459459459461,&
-                            a_osc=150)
+                            a_osc=100)
 
     call run_VMC(params=params,results=results)
     call cpu_time(T2)
@@ -43,6 +41,5 @@ program parameters_optimization
     print *,"          -> mins: ", min
     print *,"          -> secs: ", secs
 
-    
 end program parameters_optimization
 

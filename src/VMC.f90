@@ -52,7 +52,6 @@ module VMC
         allocate(density_profile(NdensProfileSteps))
         call init(params)
         
-
         ! main cycle 
         do MC_step = - NStabSteps, NMCsteps
             do step = 1, NThermSteps!thermalization steps to avoid correlated results
@@ -69,9 +68,9 @@ module VMC
             end do 
             !update accumulators
             if(MC_step > 0) then 
-                call update_states(walker(:,:,OLD)) !energy acc/ density profile
-                call update_energy_accumulator(walker(:,:,OLD))
-                call update_density_profile(walker(:,:,OLD))
+                ! call update_states(walker(:,:,OLD)) !energy acc/ density profile
+                ! call update_energy_accumulator(walker(:,:,OLD))
+                ! call update_density_profile(walker(:,:,OLD))
             end if 
         end do 
         E  = E_acc/NMCsteps                 
