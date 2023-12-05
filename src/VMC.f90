@@ -68,9 +68,9 @@ module VMC
             end do 
             !update accumulators
             if(MC_step > 0) then 
-                ! call update_states(walker(:,:,OLD)) !energy acc/ density profile
-                ! call update_energy_accumulator(walker(:,:,OLD))
-                ! call update_density_profile(walker(:,:,OLD))
+                call update_states(walker(:,:,OLD)) !energy acc/ density profile
+                call update_energy_accumulator(walker(:,:,OLD))
+                call update_density_profile(walker(:,:,OLD))
             end if 
         end do 
         E  = E_acc/NMCsteps                 

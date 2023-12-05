@@ -201,7 +201,7 @@ module HS_puregas
         do i_atom = 1, Natoms -1 
             do j_atom = i_atom + 1, Natoms
                 dist = norm2(R(i_atom,:)-R(j_atom,:))
-                u    = u + log(twobody_corr(dist))
+                u    = u + 2*log(twobody_corr(dist))
             end do
         end do
 
