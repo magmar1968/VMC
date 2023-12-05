@@ -60,6 +60,7 @@ module VMC_parameters
     logical           :: PRINT_ENERGY_EVOLUTION      = .FALSE.
     logical           :: PRINT_INITIAL_PARAMETERS    = .FALSE.
     logical           :: PRINT_TRIAL_WAVEFUNCTION    = .FALSE.
+    logical           :: PRINT_ATOMS_PATH            = .FALSE.
 
     integer,parameter  :: MAX_FILENAME_LENGHT = 50
     character(MAX_FILENAME_LENGHT) :: outfile_path = "./data/"
@@ -68,6 +69,7 @@ module VMC_parameters
     character(MAX_FILENAME_LENGHT) :: dens_profile_filename     = "density_profile.dat"
     character(MAX_FILENAME_LENGHT) :: energy_evolution_filename = "energy_evolution.dat"
     character(MAX_FILENAME_LENGHT) :: twf_filename              = "twf.dat"
+    character(MAX_FILENAME_LENGHT) :: atoms_path_filename       = "atoms_path.dat"
     !}
     
 end module 
@@ -105,6 +107,7 @@ subroutine input(filename)
     call read_data("ENERGY_EVOLUTION"     ,PRINT_ENERGY_EVOLUTION     )
     call read_data("INITIAL_PARAMETERS"   ,PRINT_INITIAL_PARAMETERS   )
     call read_data("TRIAL_WF"             ,PRINT_TRIAL_WAVEFUNCTION   )
+    call read_data("TRACK_ATOMS"          ,PRINT_ATOMS_PATH           )
 
     if (is_present("INIT_CONF_FILENAME")) then 
         call read_data("INIT_CONF_FILENAME", init_conf_filename)
@@ -121,6 +124,9 @@ subroutine input(filename)
     if (is_present("TWF_FILENAME")) then 
         call read_data("TWF_FILENAME", twf_filename)
     end if
+    if(is_present("ATOMS_PATH_FILENAME")) then
+        call read_data("ATOMS_PATH_FILENAME", atoms_path_filename)
+    end if 
 
     if (PRINT_INITIAL_PARAMETERS) then 
         call print_parameters()
@@ -147,6 +153,7 @@ subroutine print_parameters()
     print *, "   - ENERGY EVOLUTION      : ", PRINT_ENERGY_EVOLUTION
     print *, "   - INITIAL PARAMETERS    : ", PRINT_INITIAL_PARAMETERS 
     print *, "   - TRIAL WAVEFUNCTION    : ", PRINT_TRIAL_WAVEFUNCTION
+    print *, "   - TRACK ATOMS           : ", PRINT_ATOMS_PATH
     
     print *, "######################################################"
 

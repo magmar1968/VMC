@@ -52,11 +52,12 @@ module VMC
         allocate(density_profile(NdensProfileSteps))
         call init(params)
         
+
         ! main cycle 
         do MC_step = - NStabSteps, NMCsteps
             do step = 1, NThermSteps!thermalization steps to avoid correlated results
                 call diffuse(walker(:,:,OLD),walker(:,:,NEW),sigma)
-                TWF(OLD) = trial_WF(walker(:,:,OLD)) !compute the initial value of the TWF
+                TWF(OLD) = trial_WF(walker(:,:,OLD)) 
                 TWF(NEW) = trial_WF(walker(:,:,NEW))
 
                 !metropolis question
@@ -64,10 +65,11 @@ module VMC
                     OLD = 3 - OLD; NEW = 3 - NEW !swap NEW <--> OLD
                     Nacceptances = Nacceptances + 1
                 end if 
-                COUNTER = COUNTER + 1
+                COUNTER = COUNTER + 1 !total cycles
             end do 
             !update accumulators
             if(MC_step > 0) then 
+                call update_states(walker(:,:,OLD)) !energy acc/ density profile
                 call update_energy_accumulator(walker(:,:,OLD))
                 call update_density_profile(walker(:,:,OLD))
             end if 
@@ -130,6 +132,27 @@ module VMC
     end subroutine init 
 
 
+    !####################################################
+    !#               Update States                      #
+    !####################################################
+    subroutine update_states(R)
+        use VMC_parameters,Only:PRINT_ATOMS_PATH,PRINT_DENSITY_PROFILE
+        use VMC_print,Only:print_atoms_path_toFile
+        real*8,dimension(:,:) :: R
+
+        call update_energy_accumulator(R)
+
+        if(PRINT_DENSITY_PROFILE) then 
+            call update_density_profile(R)
+        end if 
+
+        if(PRINT_ATOMS_PATH) then 
+            call print_atoms_path_toFile(R,MC_step)
+        end if 
+        
+    end subroutine update_states
+
+
 
     !####################################################
     !#           Update Energy Accumulators             #
@@ -167,10 +190,6 @@ module VMC
         real*8     :: radius 
         integer    :: i_atom,i_step
         integer    :: Nenlarging,new_size
-
-        if(PRINT_DENSITY_PROFILE .eqv. .FALSE.) then 
-            return 
-        end if 
         
         do i_atom = 1, Natoms
             radius = norm2(R(i_atom,:)) 

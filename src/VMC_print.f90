@@ -132,4 +132,51 @@ module VMC_print
         end do 
         close(FID)
     end subroutine
+
+    !##################################################
+    !#           Print Atoms Path to File             #
+    !##################################################
+    subroutine print_atoms_path_toFile(R,step)
+        use VMC_parameters
+        implicit none 
+        real*8,intent(in),dimension(Natoms,DIM) :: R
+        integer,intent(in) :: step
+        integer :: i_atom
+        logical,save :: FirstTime = .TRUE.
+        character(MAX_FILENAME_LENGHT),save :: filename 
+        character(len=1024) :: string
+
+        if (FirstTime) then 
+            filename = trim(outfile_path)//trim(atoms_path_filename)
+            open(FID,file=filename,status="replace")
+            write(FID,"(A)",advance="no") "step,"
+            do i_atom = 1, Natoms
+                if(i_atom < 10) then 
+                    write(string,"(A1,I1,A2,I1,A1)") "x",i_atom,",y",i_atom,","
+                else if (i_atom >= 10 .and. i_atom < 100) then 
+                    write(string,"(A1,I2,A2,I2,A1)") "x",i_atom,",y",i_atom,","
+                else if (i_atom >= 100 .and. i_atom < 1000) then
+                    write(string,"(A1,I3,A2,I3,A1)") "x",i_atom,",y",i_atom,","
+                else 
+                    write(string,"(A1,I3,A2,I3,A1)") "x",i_atom,",y",i_atom,","
+                end if 
+
+                write(FID,"(A)",advance="no") trim(string)
+            end do 
+            FirstTime = .FALSE. 
+            write(FID,*) !escaping 
+            close(FID)
+        end if
+
+        open(FID,file=filename,access="append")
+        write(FID,"(I5,A1)",advance="no") step,","
+        do i_atom = 1, Natoms
+            write(FID,"(f15.8,A1,f15.8,A1)",advance="no") R(i_atom,1),",",R(i_atom,2),","
+        end do 
+        write(FID,*)
+        close(FID)
+    end subroutine
+
+
+
 end module 
