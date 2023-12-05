@@ -12,7 +12,7 @@ module VMC
     integer                             :: MC_step,step
     integer                             :: NEW,OLD,Nacceptances
     real*8                              :: MAX_RADIUS
-    real*8                              :: E_acc,E2_acc
+    real*8                              :: E_avg,E2_avg
     real*8,allocatable,dimension(:)     :: density_profile
     real*8,allocatable,dimension(:,:,:) :: walker
     real*8,dimension(2)                 :: TWF                !to store Trial WF values
@@ -45,7 +45,7 @@ module VMC
 
         type(VMC_varParameters),intent(in)  :: params
         type(VMC_results),intent(out)    :: results
-        real*8  :: E,E2
+        real*8  :: E
         integer :: COUNTER = 0
         
         allocate(walker(Natoms,DIM,2))
@@ -68,16 +68,16 @@ module VMC
             end do 
             !update accumulators
             if(MC_step > 0) then 
-                call update_states(walker(:,:,OLD)) !energy acc/ density profile
-                call update_energy_accumulator(walker(:,:,OLD))
-                call update_density_profile(walker(:,:,OLD))
+                E      = Elocal(walker(:,:,OLD))
+                E_avg  = E_avg + (E)/NMCsteps
+                E2_avg = E2_avg + (E**2)/NMCsteps
+
+                call print_states(walker(:,:,OLD)) !energy acc/ density profile
             end if 
         end do 
-        E  = E_acc/NMCsteps                 
-        E2 = E2_acc/NMCsteps
 
-        results%E          = E                           !FIRST RETURNED VALUE
-        results%error      = sqrt( (E2 - E**2)/NMCsteps) !SECOND RETURNED VALUE  
+        results%E          = E_avg                            !FIRST RETURNED VALUE
+        results%error      = sqrt( (E2_avg - E_avg**2))       !SECOND RETURNED VALUE  
         results%acceptRate = (100. * Nacceptances )/ COUNTER  !THIRD RETURNED VALUE  
           
         
@@ -116,8 +116,8 @@ module VMC
         density_profile = 0
         sigma           = sqrt(2*h2over2m*dt)
         Nacceptances    = 0;
-        E_acc           = 0.
-        E2_acc          = 0.
+        E_avg           = 0.
+        E2_avg          = 0.
         NEW = 2; OLD = 1  !init swappers
 
         call gen_initial_configuration(walker(:,:,OLD))
@@ -134,47 +134,32 @@ module VMC
     !####################################################
     !#               Update States                      #
     !####################################################
-    subroutine update_states(R)
-        use VMC_parameters,Only:PRINT_ATOMS_PATH,PRINT_DENSITY_PROFILE
-        use VMC_print,Only:print_atoms_path_toFile
+    subroutine print_states(R)
+        use VMC_parameters
+        use VMC_print
+        use HS_puregas,Only: get_energies
         real*8,dimension(:,:) :: R
-
-        call update_energy_accumulator(R)
+        real*8 :: epot,ekin,ekinfor,E
 
         if(PRINT_DENSITY_PROFILE) then 
             call update_density_profile(R)
+        end if
+
+        if(PRINT_ENERGY_EVOLUTION) then
+            call get_energies(R,epot,ekin,ekinfor) 
+            E = epot + ekin
+            call print_E_evolution_toFile(MC_step,E,epot,ekin,ekinfor)
         end if 
 
         if(PRINT_ATOMS_PATH) then 
             call print_atoms_path_toFile(R,MC_step)
         end if 
         
-    end subroutine update_states
+    end subroutine print_states
 
 
 
-    !####################################################
-    !#           Update Energy Accumulators             #
-    !####################################################
-    subroutine update_energy_accumulator(R)
-        use VMC_parameters
-        use VMC_print
-        use HS_puregas,Only:get_energies,Elocal
-        implicit none
 
-        real*8 :: ekin, ekinfor,epot,E
-        real*8,intent(in),dimension(Natoms,DIM) :: R
-
-        E      = Elocal(R)
-        E_acc  = E_acc + E
-        E2_acc = E2_acc + E**2
-        
-        if(PRINT_ENERGY_EVOLUTION) then
-            call get_energies(R,epot,ekin,ekinfor) 
-            call print_E_evolution_toFile(MC_step,E,epot,ekin,ekinfor)
-        end if 
-
-    end subroutine
 
 
     !####################################################
