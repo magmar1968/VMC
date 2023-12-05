@@ -50,7 +50,6 @@ parallel: all
 .PHONY: fast
 fast: clean
 fast: FFLAGS += -O3
-fast: LDFLAGS+= -03
 fast: all
 
 .PHONY: profiling
