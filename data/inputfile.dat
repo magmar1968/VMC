@@ -1,5 +1,5 @@
 !parameters
-NMCsteps                 500   !number of MCsptes
+NMCsteps                 100   !number of MCsptes
 NTsteps                  1000  !
 NStabSteps               100   !
 Natoms                   100   !
@@ -15,3 +15,4 @@ DENSITY_PROFILE          T
 ENERGY_EVOLUTION         T
 INITIAL_PARAMETERS       T
 TRIAL_WF                 T
+TRACK_ATOMS              T
