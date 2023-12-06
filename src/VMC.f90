@@ -41,16 +41,20 @@ module VMC
         use VMC_print
         use VMC_parameters
         use HS_puregas
+        use random,Only:init_random_seed
         implicit none
 
         type(VMC_varParameters),intent(in)  :: params
-        type(VMC_results),intent(out)    :: results
+        type(VMC_results),intent(out)       :: results
         real*8  :: E
+        real*8  :: c1
         integer :: COUNTER = 0
         
         allocate(walker(Natoms,DIM,2))
         allocate(density_profile(NdensProfileSteps))
         call init(params)
+        call init_random_seed()
+        
         
         ! main cycle 
         do MC_step = - NStabSteps, NMCsteps
@@ -60,7 +64,8 @@ module VMC
                 TWF(NEW) = trial_WF(walker(:,:,NEW))
 
                 !metropolis question
-                if( (TWF(NEW)/TWF(OLD))**2 > rand()  ) then 
+                call random_number(c1)
+                if( (TWF(NEW)/TWF(OLD))**2 > c1) then 
                     OLD = 3 - OLD; NEW = 3 - NEW !swap NEW <--> OLD
                     Nacceptances = Nacceptances + 1
                 end if 
