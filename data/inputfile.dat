@@ -1,8 +1,8 @@
 !parameters
-NMCsteps                 100   !number of MCsptes
+NMCsteps                 500   !number of MCsptes
 NTsteps                  1000  !
 NStabSteps               100   !
-Natoms                   100   !
+Natoms                   50    !
 NdensProfileSteps        100   !
 TWFNPartitions           5000  ! 
 dt                       0.01 !delta time

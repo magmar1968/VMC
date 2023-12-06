@@ -1,0 +1,10 @@
+# modules
+*.mod
+# log files and output data
+*.txt
+*.dat
+# executable and objects
+*.x
+*.o
+# vscode settings
+.vscode

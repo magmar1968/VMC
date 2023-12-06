@@ -195,17 +195,20 @@ module HS_puregas
         integer :: Natoms, DIM
         real*8  :: dist, u
 
-        Natoms = size(R,1); DIM = size(R,2)
+        Natoms = size(R,1)-1; DIM = size(R,2)
         u = 0
 
-        do i_atom = 1, Natoms -1 
-            do j_atom = i_atom + 1, Natoms
-                dist = norm2(R(i_atom,:)-R(j_atom,:))
-                u    = u + 2*log(twobody_corr(dist))
+        do i_atom = 1, Natoms
+            do j_atom = i_atom+1, Natoms
+                if (.not. i_atom == j_atom) then
+                  dist = norm2(R(i_atom,:)-R(j_atom,:))
+                  u = u + 2*log(twobody_corr(dist))
+                end if
             end do
         end do
 
-        
+        ! print *, "(y 50)--> ", R(50, 2)
+        ! print *, "(y 51)--> ", R(51, 2)
         do i_atom = 1, Natoms
             dist = norm2(R(i_atom,:))
             u    = u + log(harmonic_GS(dist))
@@ -394,13 +397,14 @@ module HS_puregas
                 do i_atom = 1, Natoms !for each atom and dimension    
                     do j_dim = 1, DIM !gen position
                         gamma = gauss(sigma)
-                        R_OUT(i_atom,j_dim) = R_IN(i_atom,j_dim) + gamma  
+                        R_OUT(i_atom,j_dim) = R_IN(i_atom,j_dim) + gamma
                     end do
                 end do
-
+                print *, R_OUT(100, 2)-R_IN(100, 2)
                 !check there's not hard core crossing
                 regen = check_hcore_crosses(R_OUT)
             end do
+            R_OUT(100, 2) = 0.0
         else
             !move NatomsToDiffuse
             regen = .TRUE.
