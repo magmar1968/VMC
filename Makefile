@@ -6,7 +6,7 @@ SRCEXT := .f90
 OBJEXT := .o
 
 FC      := gfortran
-FFLAGS  := 
+FFLAGS  := -O3
 LDFLAGS := 
 LIB    :=  
 .SUFFIXES: .f90 .o

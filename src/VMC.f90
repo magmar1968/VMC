@@ -16,7 +16,7 @@ module VMC
     real*8,allocatable,dimension(:)     :: density_profile
     real*8,allocatable,dimension(:,:,:) :: walker
     real*8,dimension(2)                 :: TWF                !to store Trial WF values
-
+    real*8                              :: c1
     type,public :: VMC_results
         real*8 :: E
         real*8 :: error
@@ -48,9 +48,9 @@ module VMC
         real*8  :: E,E2
         integer :: COUNTER = 0
         
-        allocate(walker(Natoms,DIM,2))
+        allocate(walker(Natoms+1,DIM,2))
         allocate(density_profile(NdensProfileSteps))
-        call init(params)
+        call init(params)        
         
         ! main cycle 
         do MC_step = - NStabSteps, NMCsteps
@@ -58,15 +58,16 @@ module VMC
                 call diffuse(walker(:,:,OLD),walker(:,:,NEW),sigma)
                 TWF(OLD) = trial_WF(walker(:,:,OLD)) 
                 TWF(NEW) = trial_WF(walker(:,:,NEW))
-
+                ! print *, -walker(100, 2, OLD) + walker(100, 2, NEW), TWF(NEW)/TWF(OLD)               
                 !metropolis question
-                if( (TWF(NEW)/TWF(OLD))**2 > rand()  ) then 
+                call random_number(c1)
+                if( (TWF(NEW)/TWF(OLD))**2 > c1) then 
                     OLD = 3 - OLD; NEW = 3 - NEW !swap NEW <--> OLD
                     Nacceptances = Nacceptances + 1
                 end if 
                 COUNTER = COUNTER + 1 !total cycles
             end do 
-            !update accumulators
+            !update accumulators/
             if(MC_step > 0) then 
                 call update_states(walker(:,:,OLD)) !energy acc/ density profile
                 call update_energy_accumulator(walker(:,:,OLD))
