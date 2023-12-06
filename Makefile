@@ -37,8 +37,8 @@ remake: all
 
 .PHONY: debug
 debug: clean
-debug: FFLAGS += -g -W -Wall -fcheck=all
-debug: LDFLAGS+= -g -W -Wall -fcheck=all
+debug: FFLAGS += -g -W -Wall -fcheck=all -fsanitize=address,null,undefined
+debug: LDFLAGS+= -g -W -Wall -fcheck=all -fsanitize=address,null,undefined
 debug: all
 
 .PHONY:parallel

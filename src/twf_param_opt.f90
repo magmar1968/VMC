@@ -34,12 +34,13 @@ program parameters_optimization
 
     print *, "######################################################"
     print *, "RESULTS:"
-    print *, "E:       ", results%E
-    print *, "error:   ", results%error
-    print *, "accrate: ", results%acceptrate 
-    print *,"comp time ", delta
-    print *,"          -> mins: ", min
-    print *,"          -> secs: ", secs
+    print *, "  E:       ", results%E
+    print *, "  error:   ", results%error
+    print *, "  accrate: ", results%acceptrate 
+    print *, "  comp time ", delta
+    print *, "          -> mins: ", min
+    print *, "          -> secs: ", secs
+    print *, "######################################################"
 
 end program parameters_optimization
 

@@ -211,7 +211,7 @@ module HS_puregas
             u    = u + log(harmonic_GS(dist))
         end do 
         
-        trial_WF = exp(u)
+        trial_WF = exp(u)        
         return 
     end function trial_WF
 
@@ -382,6 +382,7 @@ module HS_puregas
         integer :: Natoms, DIM
         logical :: regen
         real*8  :: u
+        real*8  :: r
 
         Natoms = size(R_IN,dim=1); DIM = size(R_IN,dim=2) 
 
@@ -393,8 +394,7 @@ module HS_puregas
                 regen = .TRUE.
                 do i_atom = 1, Natoms !for each atom and dimension    
                     do j_dim = 1, DIM !gen position
-                        gamma = gauss(sigma)
-                        R_OUT(i_atom,j_dim) = R_IN(i_atom,j_dim) + gamma  
+                        R_OUT(i_atom,j_dim) = R_IN(i_atom,j_dim) + gauss(sigma)  
                     end do
                 end do
 
