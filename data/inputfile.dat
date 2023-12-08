@@ -15,4 +15,4 @@ DENSITY_PROFILE          T
 ENERGY_EVOLUTION         T
 INITIAL_PARAMETERS       T
 TRIAL_WF                 T
-TRACK_ATOMS              T
+TRACK_ATOMS              F

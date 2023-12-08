@@ -382,7 +382,6 @@ module HS_puregas
         integer :: Natoms, DIM
         logical :: regen
         real*8  :: u
-        real*8  :: r
 
         Natoms = size(R_IN,dim=1); DIM = size(R_IN,dim=2) 
 
