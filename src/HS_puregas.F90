@@ -55,9 +55,6 @@ module HS_puregas
 
     !trial Wavefunction parameters    
    
-    real*8,private,save :: C          
-    real*8,private,save :: Gamma
-    real*8,private,save :: D = 1 !energy scale(hbar^2/2m)
     
     type :: HS_parameters
         real*8 Rcore
@@ -65,8 +62,15 @@ module HS_puregas
         real*8 Rv
         real*8 k0
         real*8 a_osc
+        real*8 D
     end type
+
+    type :: HS_constants
+        real*8 :: C
+        real*8 :: Gamma
+    end type 
     type(HS_parameters),private,save :: params
+    type(HS_constants) ,private,save :: constants
     
    
 
@@ -94,19 +98,24 @@ module HS_puregas
         implicit none
         real*8, intent(in) :: alpha,Rv,k0,a_osc
         real*8, intent(in), optional :: Rcore
+        real*8 :: C,Gamma
 
         if( .not. present(Rcore)) then 
-            params = HS_parameters(alpha=alpha,Rv=Rv,k0=k0,a_osc=a_osc,Rcore=1) 
+            params = HS_parameters(alpha=alpha,Rv=Rv,k0=k0,&
+                                   a_osc=a_osc,Rcore=1,D=1) 
         else 
-            params = HS_parameters(alpha=alpha,Rv=Rv,k0=k0,a_osc=a_osc,Rcore=Rcore)
+            params = HS_parameters(alpha=alpha,Rv=Rv,k0=k0,&
+                                  a_osc=a_osc,Rcore=Rcore,D=1)
         end if 
 
         C = - bessel_j0(params%k0*params%Rcore)/&
               bessel_y0(params%k0*params%Rcore)
 
         Gamma =  -(params%alpha*params%k0) /exp(- params%Rv/ params%alpha) * &
-                  (bessel_j1(params%k0*params%Rv) - bessel_j0(params%k0*params%Rcore)/&
-                   bessel_y0(k0*params%Rcore) * bessel_y1(k0*params%Rv))
+                  (bessel_j1(params%k0*params%Rv) + C*bessel_y1(k0*params%Rv))
+    
+        constants = HS_constants(C=C,Gamma=Gamma)
+    
     end subroutine
     !####################################################
 
@@ -114,9 +123,9 @@ module HS_puregas
     !####################################################
     !#              Set energy scale                    #
     !####################################################
-    subroutine set_energy_scale(newD)
-        real*8,intent(in) :: newD
-        D = newD 
+    subroutine set_energy_scale(D)
+        real*8,intent(in) :: D
+        params%D = D 
     end subroutine
 
     !####################################################
@@ -198,12 +207,12 @@ module HS_puregas
         Natoms = size(R,1); DIM = size(R,2)
         u = 0
 
-        do i_atom = 1, Natoms -1 
-            do j_atom = i_atom + 1, Natoms
-                dist = norm2(R(i_atom,:)-R(j_atom,:))
-                u    = u + 2*log(twobody_corr(dist))
-            end do
-        end do
+        ! do i_atom = 1, Natoms -1 
+        !     do j_atom = i_atom + 1, Natoms
+        !         dist = norm2(R(i_atom,:)-R(j_atom,:))
+        !         u    = u + 2*log(twobody_corr(dist))
+        !     end do
+        ! end do
 
         
         do i_atom = 1, Natoms
@@ -226,10 +235,10 @@ module HS_puregas
         twobody_corr = 0
 
         if (r > params%Rv) then 
-            twobody_corr = 1 - Gamma* exp(-r / params%alpha)
+            twobody_corr = 1 - constants%Gamma* exp(-r / params%alpha)
             return
         else if ( r > params%Rcore .AND. r <= params%Rv ) then
-            twobody_corr = bessel_j0(params%k0*r) + C *&
+            twobody_corr = bessel_j0(params%k0*r) + constants%C *&
                            bessel_y0(params%k0*r)
             return
         else
@@ -266,11 +275,11 @@ module HS_puregas
         twobody_corrprime = 0
     
         if (r > params%Rv) then 
-            twobody_corrprime =  (Gamma * exp(-r / params%alpha))/params%alpha
+            twobody_corrprime =  (constants%Gamma * exp(-r / params%alpha))/params%alpha
             return 
         else if ( r > params%Rcore .AND. r <= params%Rv ) then
             twobody_corrprime = -params%k0* ( bessel_j1(params%k0 *r) + &
-                                          C * bessel_y1(params%k0*r))
+                                constants%C * bessel_y1(params%k0 *r))
             return
         else 
             twobody_corrprime = 0
@@ -285,13 +294,13 @@ module HS_puregas
 
         if( r > params%Rv) then 
             twobody_corrdoubleprime =  &
-                 - (Gamma * exp(-r / params%alpha))/(params%alpha**2)
+                 - (constants%Gamma * exp(-r / params%alpha))/(params%alpha**2)
             return 
         else if (r > params%Rcore .AND. r <= params%Rv ) then 
-            twobody_corrdoubleprime =  -params%k0**2/2. * &
+            twobody_corrdoubleprime =  -(params%k0**2)/2. * &
                 (&
                         ( bessel_j0(params%k0*r) - bessel_jn(2,params%k0*r))&
-                   +  C*( bessel_y0(params%k0*r) - bessel_yn(2,params%k0*r))&
+         +  constants%C*( bessel_y0(params%k0*r) - bessel_yn(2,params%k0*r))&
                 )
             return 
         else 
@@ -409,8 +418,7 @@ module HS_puregas
                     call random_number(u)
                     i_atom = floor(Natoms*u) + 1 !choose randomly one atom to diffuse
                     do j_dim = 1, DIM !gen position
-                        gamma = gauss(sigma)
-                        R_OUT(i_atom,j_dim) = R_IN(i_atom,j_dim) + gamma 
+                        R_OUT(i_atom,j_dim) = R_IN(i_atom,j_dim) + gauss(sigma)
                     end do
                 end do 
                 !check there's not hard core crossing
@@ -445,7 +453,7 @@ module HS_puregas
         do i_atom=1,size(R,dim=1) 
             radius = norm2(R(i_atom,:)) 
             !potential energy in normalized quantities
-            Epot = Epot + (params%Rcore**2 / params%a_osc**2) * radius**2
+            Epot = Epot + (params%Rcore**2 / params%a_osc**4) * radius**2
         end do 
         return 
     end function
@@ -456,45 +464,66 @@ module HS_puregas
     real*8 function Ekin(R)
         real*8,intent(in),dimension(:,:) :: R
         real*8, dimension(size(R,dim=1),size(R,2)) :: DRIFT
-        real*8  :: radius,r1m,twiceup,us!,remainder,num,den
+        real*8  :: radius,r1m,twiceup,us,up!,remainder,num,den
+        real*8  :: ekin_2body,ekin_harm,ekin_drift,appo
         integer :: i_atom,j_atom,k_atom!, i_step
         integer :: Natoms
         ekin = 0
+        ekin_2body = 0
+        ekin_harm  = 0
+        ekin_drift = 0
         Natoms = size(R,dim=1)
 
+
+#ifndef  TURNOFF_PAIRINTERACTION
         !pair interaction term 
         do i_atom=1,Natoms-1
             do j_atom=i_atom+1,Natoms
                 radius  = norm2(R(i_atom,:) - R(j_atom,:))
                 r1m     = 1./radius  
-                twiceup = 2*twobody_corrdoubleprime(radius)/twobody_corr(radius)
-                us      = twobody_corrprime(radius)/twobody_corr(radius)
-                
+                twiceup = 2*twobody_corrprime(radius)/twobody_corr(radius)
+                us      = twobody_corrdoubleprime(radius)/twobody_corr(radius)
+                appo    = - 2*( us + twiceup * r1m +  - 0.25d0*(twiceup**2))
                 !multiply by two to consider symmetric therms
-                ekin = ekin + 2*( us + twiceup * r1m +  - 0.25d0*(twiceup)**2)
+                if(appo < 0) then 
+                    print *, "r:" , radius,"twiceup:", twiceup,"us:",us,"appo:",appo
+                end if 
+                ekin = ekin + appo
             end do 
         end do 
+        ekin_2body  = Ekin
+#endif 
 
         !potential interaction term 
-        do k_atom=1,Natoms
-            radius  = norm2(R(k_atom,:))
-            r1m     = 1./radius
-            twiceup = 2*harmonic_GSprime(radius)/harmonic_GS(radius)
-            us      = harmonic_GSdoubleprime(radius)/harmonic_GS(radius)
+        ! do k_atom=1,Natoms
+        !     radius  = norm2(R(k_atom,:))
+        !     r1m     = 1./radius
+        !     up      = harmonic_GSprime(radius)/harmonic_GS(radius)
+        !     us      = harmonic_GSdoubleprime(radius)/harmonic_GS(radius)
+            
+        !     ekin = ekin - ( us + up * r1m +  - (up**2))
+        ! end do 
+        ! ekin_harm = ekin - ekin_2body
 
-            ekin = ekin + ( us + twiceup * r1m +  - 0.25d0*(twiceup)**2)
-        end do 
- 
+
         !drift term
         DRIFT = F(R)
         do i_atom=1,Natoms
-            ekin = ekin + 0.25d0*dot_product(DRIFT(i_atom,:),&
+            ekin = ekin - 0.25d0*dot_product(DRIFT(i_atom,:),&
                                              DRIFT(i_atom,:))
         end do 
-        ekin = - D*Ekin
+        ekin_drift = ekin - ekin_2body - ekin_harm
+        ekin = params%D*Ekin
+        open(44,file="./data/ekin.dat",access="append")
+        write(44,*) ekin,ekin_2body,ekin_harm,ekin_drift
+        close(44)
         return
     end function
 
+
+    !###################################################
+    !#                Compute Ekinfor                  #
+    !################################################### 
     real*8 function Ekinfor(R)
         real*8,intent(in),dimension(:,:) :: R
         real*8, dimension(size(R,dim=1),size(R,dim=2)) :: DRIFT
@@ -507,7 +536,7 @@ module HS_puregas
             ekinfor = ekinfor + 0.25*dot_product(DRIFT(i_atom,:),&
                                                  DRIFT(i_atom,:))
         end do 
-        ekinfor = D*ekinfor
+        ekinfor = params%D * ekinfor
         return
     end function
 
@@ -543,17 +572,17 @@ module HS_puregas
         
         F = 0
         !interaction force
-        do i_atom = 1,Natoms-1
-            do j_atom = i_atom+1,Natoms
-                radius  = norm2(R(i_atom,:) - R(j_atom,:))       
-                !normalized versor
-                r_hat = (R(i_atom,:) - R(j_atom,:))/radius  
-                twiceup = 2*twobody_corrprime(radius)/twobody_corr(radius)
+        ! do i_atom = 1,Natoms-1
+        !     do j_atom = i_atom+1,Natoms
+        !         radius  = norm2(R(i_atom,:) - R(j_atom,:))       
+        !         !normalized versor
+        !         r_hat = (R(i_atom,:) - R(j_atom,:))/radius  
+        !         twiceup = 2*twobody_corrprime(radius)/twobody_corr(radius)
                 
-                F(i_atom,:) = F(i_atom,:) + twiceup*r_hat ! using twice up because every interaction must be
-                F(j_atom,:) = F(j_atom,:) - twiceup*r_hat ! counted twice since we are looping for i<j 
-            end do 
-        end do 
+        !         F(i_atom,:) = F(i_atom,:) + twiceup*r_hat ! using twice up because every interaction must be
+        !         F(j_atom,:) = F(j_atom,:) - twiceup*r_hat ! counted twice since we are looping for i<j 
+        !     end do 
+        ! end do 
 
         !field force
         do k_atom=1,Natoms

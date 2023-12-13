@@ -155,16 +155,8 @@ module VMC
             E = epot + ekin
             call print_E_evolution_toFile(MC_step,E,epot,ekin,ekinfor)
         end if 
-
-        if(PRINT_ATOMS_PATH) then 
-            call print_atoms_path_toFile(R,MC_step)
-        end if 
-        
+       
     end subroutine print_states
-
-
-
-
 
 
     !####################################################

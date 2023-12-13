@@ -23,7 +23,7 @@ program parameters_optimization
     params = VMC_varParameters(Rv=20,&
                             alpha=36.0,&
                             k0=0.010459459459459461,&
-                            a_osc=125)
+                            a_osc=150)
 
     call run_VMC(params=params,results=results)
     call cpu_time(T2)
