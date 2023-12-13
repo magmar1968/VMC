@@ -445,7 +445,7 @@ module HS_puregas
         do i_atom=1,size(R,dim=1) 
             radius = norm2(R(i_atom,:)) 
             !potential energy in normalized quantities
-            Epot = Epot + (params%Rcore**2 / params%a_osc**2) * radius**2
+            Epot = Epot + (params%Rcore**2 / params%a_osc**4) * radius**2
         end do 
         return 
     end function
