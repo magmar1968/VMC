@@ -1,11 +1,11 @@
 !parameters
-NMCsteps                 1000  !number of MCsptes
+NMCsteps                 100  !number of MCsptes
 NTsteps                  1000  !
 NStabSteps               100   !
-Natoms                   50    !
-NdensProfileSteps        100   !
+Natoms                   100   !
+NdensProfileSteps        75    !
 TWFNPartitions           5000  ! 
-dt                       0.01 !delta time
+dt                       0.05 !delta time
 
 
 !printing flag
@@ -14,5 +14,5 @@ FINAL_CONFIGURATION      T
 DENSITY_PROFILE          T
 ENERGY_EVOLUTION         T
 INITIAL_PARAMETERS       T
-TRIAL_WF                 T
+TRIAL_WF                 F
 TRACK_ATOMS              F
