@@ -161,6 +161,7 @@ module HS_puregas
         integer :: Natoms,DIM
         check_hcore_crosses = .FALSE.
 
+#ifndef TURNOFF_INTERACTION
         Natoms = size(R,1);DIM = size(R,2)
         do i_atom=1, Natoms -1 
             do j_atom = i_atom + 1, Natoms
@@ -172,6 +173,7 @@ module HS_puregas
                 end if 
             end do 
         end do 
+#endif
     end function check_hcore_crosses
     !####################################################
 
@@ -397,12 +399,8 @@ module HS_puregas
                         R_OUT(i_atom,j_dim) = R_IN(i_atom,j_dim) + gauss(sigma)  
                     end do
                 end do
-#ifndef TURNOFF_INTERACTION
                 !check there's not hard core crossing
                 regen = check_hcore_crosses(R_OUT)
-#else 
-                regen = .FALSE.
-#endif
             end do
         else
             !move NatomsToDiffuse
@@ -570,8 +568,5 @@ module HS_puregas
         return 
     end function
 
-    subroutine get_density_profile()
-
-    end subroutine
 end module
  
