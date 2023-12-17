@@ -142,7 +142,7 @@ subroutine print_parameters()
     print *, "   - Number MC Steps       : ", NMCsteps
     print *, "   - Number Therm Steps    : ", NThermSteps
     print *, "   - Number Stability steps: ", NStabSteps
-    print *, "   - dt                    : ", dt
+    print "(x,a,4x,f8.2)", "   - dt                    : ", dt
     print *, "   - Atoms Number          : ", Natoms
     print *, "   - Number step dens prof : ", NdensProfileSteps
     print *, "   - TWF discret. N ofsteps: ", TWFNPartitions
