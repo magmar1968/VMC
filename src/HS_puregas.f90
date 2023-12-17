@@ -57,7 +57,7 @@ module HS_puregas
    
     real*8,private,save :: C          
     real*8,private,save :: Gamma
-    real*8,private,save :: D = 1 !energy scale(hbar^2/2m)
+    real*8,private,save :: D = 1. !energy scale(hbar^2/2m Rcore^2)
     
     type :: HS_parameters
         real*8 Rcore
@@ -187,28 +187,29 @@ module HS_puregas
     ! correlation. We use logarithm to trasform a production into a summatory
     ! which is much faster to compute.
     real*8 function trial_WF(R)
-        use omp_lib
         implicit none
         
         real*8, dimension(:,:), intent(in) :: R
         integer :: i_atom,j_atom
         integer :: Natoms, DIM
-        real*8  :: dist, u
+        real*8  :: dist, u,x
 
         Natoms = size(R,1); DIM = size(R,2)
         u = 0
 
+#ifndef TURNOFF_INTERACTION
         do i_atom = 1, Natoms -1 
             do j_atom = i_atom + 1, Natoms
                 dist = norm2(R(i_atom,:)-R(j_atom,:))
                 u    = u + 2*log(twobody_corr(dist))
             end do
         end do
+#endif
 
-        
         do i_atom = 1, Natoms
             dist = norm2(R(i_atom,:))
-            u    = u + log(harmonic_GS(dist))
+            x    = dist/params%a_osc
+            u    = u + (-x**2/2.)
         end do 
         
         trial_WF = exp(u)        
@@ -396,9 +397,12 @@ module HS_puregas
                         R_OUT(i_atom,j_dim) = R_IN(i_atom,j_dim) + gauss(sigma)  
                     end do
                 end do
-
+#ifndef TURNOFF_INTERACTION
                 !check there's not hard core crossing
                 regen = check_hcore_crosses(R_OUT)
+#else 
+                regen = .FALSE.
+#endif
             end do
         else
             !move NatomsToDiffuse
@@ -456,42 +460,37 @@ module HS_puregas
     real*8 function Ekin(R)
         real*8,intent(in),dimension(:,:) :: R
         real*8, dimension(size(R,dim=1),size(R,2)) :: DRIFT
-        real*8  :: radius,r1m,twiceup,us!,remainder,num,den
-        integer :: i_atom,j_atom,k_atom!, i_step
+        real*8  :: radius,r1m,up,us,appo!,remainder,num,den
+        integer :: i_atom,j_atom!, i_step
         integer :: Natoms
         ekin = 0
         Natoms = size(R,dim=1)
 
+#ifndef TURNOFF_INTERACTION
         !pair interaction term 
         do i_atom=1,Natoms-1
             do j_atom=i_atom+1,Natoms
                 radius  = norm2(R(i_atom,:) - R(j_atom,:))
                 r1m     = 1./radius  
-                twiceup = 2*twobody_corrdoubleprime(radius)/twobody_corr(radius)
-                us      = twobody_corrprime(radius)/twobody_corr(radius)
+                up      = twobody_corrprime(radius)/twobody_corr(radius)
+                us      = twobody_corrdoubleprime(radius)/twobody_corr(radius)
                 
                 !multiply by two to consider symmetric therms
-                ekin = ekin + 2*( us + twiceup * r1m +  - 0.25d0*(twiceup)**2)
+                appo = - 2*( us + up * r1m +  - (up)**2)
+                ekin = ekin + appo
             end do 
         end do 
+#endif
 
         !potential interaction term 
-        do k_atom=1,Natoms
-            radius  = norm2(R(k_atom,:))
-            r1m     = 1./radius
-            twiceup = 2*harmonic_GSprime(radius)/harmonic_GS(radius)
-            us      = harmonic_GSdoubleprime(radius)/harmonic_GS(radius)
-
-            ekin = ekin + ( us + twiceup * r1m +  - 0.25d0*(twiceup)**2)
-        end do 
- 
+        ekin = ekin - (-2/(params%a_osc**2))*Natoms
         !drift term
         DRIFT = F(R)
         do i_atom=1,Natoms
-            ekin = ekin + 0.25d0*dot_product(DRIFT(i_atom,:),&
+            ekin = ekin - 0.25d0*dot_product(DRIFT(i_atom,:),&
                                              DRIFT(i_atom,:))
         end do 
-        ekin = - D*Ekin
+        ekin = D*Ekin
         return
     end function
 
@@ -536,36 +535,38 @@ module HS_puregas
         real*8,intent(in) ,dimension(:,:) :: R
         real*8,dimension(size(R,dim=1),size(R,dim=2)) :: F
         real*8,dimension(size(R,dim=2))   :: r_hat !versor
-        real*8  :: radius,twiceup, up
+        real*8  :: radius, up
         integer :: i_atom,j_atom,k_atom
         integer :: Natoms
         Natoms = size(R,dim=1)
         
         F = 0
+
+#ifndef TURNOFF_INTERACTION
         !interaction force
         do i_atom = 1,Natoms-1
             do j_atom = i_atom+1,Natoms
                 radius  = norm2(R(i_atom,:) - R(j_atom,:))       
                 !normalized versor
                 r_hat = (R(i_atom,:) - R(j_atom,:))/radius  
-                twiceup = 2*twobody_corrprime(radius)/twobody_corr(radius)
+                up = twobody_corrprime(radius)/twobody_corr(radius)
                 
-                F(i_atom,:) = F(i_atom,:) + twiceup*r_hat ! using twice up because every interaction must be
-                F(j_atom,:) = F(j_atom,:) - twiceup*r_hat ! counted twice since we are looping for i<j 
+                F(i_atom,:) = F(i_atom,:) + up*r_hat 
+                F(j_atom,:) = F(j_atom,:) - up*r_hat 
             end do 
         end do 
-
+#endif
         !field force
         do k_atom=1,Natoms
             radius = norm2(R(k_atom,:))
             !normalize versor
             r_hat = R(k_atom,:)/radius
-            up = harmonic_GSprime(radius)/harmonic_GS(radius)
+            up    = - radius/(params%a_osc**2)
 
             F(k_atom,:) = F(k_atom,:) + up*r_hat    
         end do
 
-        F = 2*F
+        F = 2*F !from force defintion
         return 
     end function
 
