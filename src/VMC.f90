@@ -52,14 +52,25 @@ module VMC
         
         allocate(walker(Natoms,DIM,2))
         allocate(density_profile(NdensProfileSteps))
-        call init(params)
+        call init_parameters(params) !initialize the simulation parameters
         call init_random_seed()
+
+        call gen_initial_configuration(walker(:,:,OLD))
+        if (PRINT_INITIAL_CONFIGURATION) then 
+            call print_inital_conf_toFile(walker(:,:,OLD))    
+        end if 
         
         
         ! main cycle 
         do MC_step = - NStabSteps, NMCsteps
             do step = 1, NThermSteps!thermalization steps to avoid correlated results
+                COUNTER = COUNTER + 1 !total cycles
+                
                 call diffuse(walker(:,:,OLD),walker(:,:,NEW),sigma)
+                if (check_hcore_crosses(walker(:,:,NEW)) .eqv. .TRUE.) then
+                    continue
+                end if 
+
                 TWF(OLD) = trial_WF(walker(:,:,OLD)) 
                 TWF(NEW) = trial_WF(walker(:,:,NEW))
 
@@ -69,7 +80,6 @@ module VMC
                     OLD = 3 - OLD; NEW = 3 - NEW !swap NEW <--> OLD
                     Nacceptances = Nacceptances + 1
                 end if 
-                COUNTER = COUNTER + 1 !total cycles
             end do 
             !update accumulators
             if(MC_step > 0) then 
@@ -84,7 +94,6 @@ module VMC
         results%E          = E_avg                            !FIRST RETURNED VALUE
         results%error      = sqrt( (E2_avg - E_avg**2))       !SECOND RETURNED VALUE  
         results%acceptRate = (100. * Nacceptances )/ COUNTER  !THIRD RETURNED VALUE  
-          
         
         if(PRINT_FINAL_CONFIGURATION) then 
             call print_final_conf_toFile(walker(:,:,OLD))
@@ -102,7 +111,7 @@ module VMC
     !####################################################
     !#                  Init                            #
     !#################################################### 
-    subroutine init(params)
+    subroutine init_parameters(params)
         use VMC_parameters
         use HS_puregas,Only:gen_initial_configuration
         use HS_puregas,Only:set_HS_parameters
@@ -125,15 +134,10 @@ module VMC
         E2_avg          = 0.
         NEW = 2; OLD = 1  !init swappers
 
-        call gen_initial_configuration(walker(:,:,OLD))
-        if (PRINT_INITIAL_CONFIGURATION) then 
-            call print_inital_conf_toFile(walker(:,:,OLD))    
-        end if 
-
         if (PRINT_TRIAL_WAVEFUNCTION) then 
             call print_TWF_tofile()
         end if 
-    end subroutine init 
+    end subroutine init_parameters 
 
 
     !####################################################

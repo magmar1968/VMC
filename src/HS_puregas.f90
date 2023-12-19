@@ -383,41 +383,26 @@ module HS_puregas
         real*8,  intent(in) :: sigma
         integer :: i_atom, j_dim, n_atom
         integer :: Natoms, DIM
-        logical :: regen
         real*8  :: u
 
         Natoms = size(R_IN,dim=1); DIM = size(R_IN,dim=2) 
 
-
         if(.not. present(NatomsToDiffuse)) then 
             !move each atoms 
-            regen = .TRUE.
-            do while (regen .eqv. .TRUE.)
-                regen = .TRUE.
-                do i_atom = 1, Natoms !for each atom and dimension    
-                    do j_dim = 1, DIM !gen position
-                        R_OUT(i_atom,j_dim) = R_IN(i_atom,j_dim) + gauss(sigma)  
-                    end do
+            do i_atom = 1, Natoms !for each atom and dimension    
+                do j_dim = 1, DIM !gen position
+                    R_OUT(i_atom,j_dim) = R_IN(i_atom,j_dim) + gauss(sigma)  
                 end do
-                !check there's not hard core crossing
-                regen = check_hcore_crosses(R_OUT)
-            end do
+            end do    
         else
-            !move NatomsToDiffuse
-            regen = .TRUE.
-            do while (regen .eqv. .TRUE.)
-                regen = .TRUE.
-                do n_atom = 1, NatomsToDiffuse !for each atom and dimension    
-                    call random_number(u)
-                    i_atom = floor(Natoms*u) + 1 !choose randomly one atom to diffuse
-                    do j_dim = 1, DIM !gen position
-                        gamma = gauss(sigma)
-                        R_OUT(i_atom,j_dim) = R_IN(i_atom,j_dim) + gamma 
-                    end do
-                end do 
-                !check there's not hard core crossing
-                regen = check_hcore_crosses(R_OUT)
-            end do
+            do n_atom = 1, NatomsToDiffuse !for each atom and dimension    
+                call random_number(u)
+                i_atom = floor(Natoms*u) + 1 !choose randomly one atom to diffuse
+                do j_dim = 1, DIM !gen position
+                    gamma = gauss(sigma)
+                    R_OUT(i_atom,j_dim) = R_IN(i_atom,j_dim) + gamma 
+                end do
+            end do 
         end if 
     end subroutine 
     !###########################################################
