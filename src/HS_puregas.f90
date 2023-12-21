@@ -144,8 +144,8 @@ module HS_puregas
             end do 
             !check there's not hard core crossing with the previously generated atoms
             regen = check_hcore_crosses(R)
-        end do
-    end subroutine 
+                    end do
+            end subroutine 
     !####################################################
 
     !####################################################
@@ -395,12 +395,12 @@ module HS_puregas
                 end do
             end do    
         else
+            R_OUT = R_IN !copy initial position to old one
             do n_atom = 1, NatomsToDiffuse !for each atom and dimension    
                 call random_number(u)
                 i_atom = floor(Natoms*u) + 1 !choose randomly one atom to diffuse
                 do j_dim = 1, DIM !gen position
-                    gamma = gauss(sigma)
-                    R_OUT(i_atom,j_dim) = R_IN(i_atom,j_dim) + gamma 
+                    R_OUT(i_atom,j_dim) = R_OUT(i_atom,j_dim) + gauss(sigma)
                 end do
             end do 
         end if 
