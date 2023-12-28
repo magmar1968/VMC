@@ -64,12 +64,14 @@ module VMC_parameters
 
     integer,parameter  :: MAX_FILENAME_LENGHT = 50
     character(MAX_FILENAME_LENGHT) :: outfile_path = "./data/"
+    character(10)                  :: outfile_ext  = ".dat"
     character(MAX_FILENAME_LENGHT) :: init_conf_filename        = "init_conf.dat"
     character(MAX_FILENAME_LENGHT) :: fin_conf_filename         = "fin_conf.dat"
     character(MAX_FILENAME_LENGHT) :: dens_profile_filename     = "density_profile.dat"
     character(MAX_FILENAME_LENGHT) :: energy_evolution_filename = "energy_evolution.dat"
     character(MAX_FILENAME_LENGHT) :: twf_filename              = "twf.dat"
     character(MAX_FILENAME_LENGHT) :: atoms_path_filename       = "atoms_path.dat"
+
     !}
     
 end module 
