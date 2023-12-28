@@ -59,7 +59,6 @@ module VMC
         if (PRINT_INITIAL_CONFIGURATION) then 
             call print_inital_conf_toFile(walker(:,:,OLD))    
         end if 
-         
         ! main cycle 
         do MC_step = - NStabSteps, NMCsteps
             do step = 1, NThermSteps!thermalization steps to avoid correlated results
@@ -70,9 +69,10 @@ module VMC
                     TWF(OLD) = trial_WF(walker(:,:,OLD)) 
                     TWF(NEW) = trial_WF(walker(:,:,NEW))
 
+                    
                     !metropolis question
                     call random_number(c1)
-                    if( (TWF(NEW)/TWF(OLD))**2 > c1) then 
+                    if( dexp( 2*(TWF(NEW) - TWF(OLD))) > c1) then 
                         OLD = 3 - OLD; NEW = 3 - NEW !swap NEW <--> OLD
                         Nacceptances = Nacceptances + 1
                     end if

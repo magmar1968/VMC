@@ -197,13 +197,13 @@ module HS_puregas
         real*8  :: dist, u,x
 
         Natoms = size(R,1); DIM = size(R,2)
-        u = 0
+        u = 0.
 
 #ifndef TURNOFF_INTERACTION
         do i_atom = 1, Natoms -1 
             do j_atom = i_atom + 1, Natoms
                 dist = norm2(R(i_atom,:)-R(j_atom,:))
-                u    = u + 2*log(twobody_corr(dist))
+                u    = u + 2*dlog(twobody_corr(dist))
             end do
         end do
 #endif
@@ -213,8 +213,8 @@ module HS_puregas
             x    = dist/params%a_osc
             u    = u + (-x**2/2.)
         end do 
-        
-        trial_WF = exp(u)        
+
+        trial_WF = u        
         return 
     end function trial_WF
 
