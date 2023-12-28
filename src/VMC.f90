@@ -85,8 +85,8 @@ module VMC
             !update accumulators
             if(MC_step > 0) then 
                 E      = Elocal(walker(:,:,OLD))
-                E_avg  = E_avg + (E)/NMCsteps
-                E2_avg = E2_avg + (E**2)/NMCsteps
+                E_avg  = E_avg  * real(MC_step-1,kind=8)/real(MC_step,8) + (E)/real(MC_step,8)
+                E2_avg = E2_avg * real(MC_step-1,kind=8)/real(MC_step,8) + (E**2)/real(MC_step,8)
 
                 call print_states(walker(:,:,OLD)) !energy acc/ density profile
             end if 
@@ -158,7 +158,7 @@ module VMC
         if(PRINT_ENERGY_EVOLUTION) then
             call get_energies(R,epot,ekin,ekinfor) 
             E = epot + ekin
-            call print_E_evolution_toFile(MC_step,E,epot,ekin,ekinfor)
+            call print_E_evolution_toFile(MC_step,E_avg,E,epot,ekin,ekinfor)
         end if 
 
         if(PRINT_ATOMS_PATH) then 
