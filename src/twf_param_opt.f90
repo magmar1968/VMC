@@ -13,17 +13,17 @@ program parameters_optimization
     use VMC,Only:VMC_varParameters,VMC_results
     implicit none
 
-
     real    :: T1,T2
     integer :: secs,min, delta
     type(VMC_varParameters) ::  params
     type(VMC_results) :: results
+
     call cpu_time(T1)
     call input("./data/inputfile.dat")
     params = VMC_varParameters(Rv=20,&
                             alpha=36.0,&
-                            k0=0.010459459459459461,&
-                            a_osc=125)
+                            k0   =0.010459459459459461,&
+                            a_osc=50)
 
     call run_VMC(params=params,results=results)
     call cpu_time(T2)
