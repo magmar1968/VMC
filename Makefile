@@ -37,8 +37,11 @@ remake: all
 
 .PHONY: debug
 debug: clean
-debug: FFLAGS += -g -W -Wall -fcheck=all -DTURNOFF_INTERACTION
-debug: LDFLAGS+= -g -W -Wall -fcheck=all -DTURNOFF_INTERACTION
+debug: FFLAGS += -g -W -Wall -fcheck=all 
+debug: LDFLAGS+= -g -W -Wall -fcheck=all
+#decomment to turnoff the interaction between particles
+debug: FFLAGS += #-DTURNOFF_INTERACTION
+debug: LDFLAGS+= #-DTURNOFF_INTERACTION
 debug: all
 
 .PHONY:parallel

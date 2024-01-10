@@ -58,6 +58,9 @@ module HS_puregas
     real*8,private,save :: C          
     real*8,private,save :: Gamma
     real*8,private,save :: D = 1. !energy scale(hbar^2/2m Rcore^2)
+
+    integer,private,save :: NTWFpartitions
+    real*8,private,save  :: drTable
     
     type :: HS_parameters
         real*8 Rcore
@@ -68,6 +71,7 @@ module HS_puregas
     end type
     type(HS_parameters),private,save :: params
     
+    real*8,allocatable,dimension(:) :: table_coor_func
    
 
     
@@ -77,7 +81,8 @@ module HS_puregas
 
     !public functions
     public :: set_HS_parameters
-    ! public :: end
+    public :: gen_TWF_tables
+    public :: free_TWF_tables
     public :: gen_initial_configuration
     public :: trial_WF
     public :: diffuse
@@ -110,6 +115,10 @@ module HS_puregas
     end subroutine
     !####################################################
 
+    subroutine free_TWF_tables()
+        deallocate(table_coor_func)
+    end subroutine free_TWF_tables
+
 
     !####################################################
     !#              Set energy scale                    #
@@ -118,6 +127,35 @@ module HS_puregas
         real*8,intent(in) :: newD
         D = newD 
     end subroutine
+
+
+    !####################################################
+    !#           get Trial Wave Function Terms          #
+    !####################################################
+    subroutine gen_TWF_tables(Npartitions)
+        implicit none
+        integer,intent(in) :: Npartitions
+        real*8  :: r
+        integer :: i_step
+
+        NTWFpartitions = Npartitions
+
+        drTable = 8*params%a_osc/Npartitions
+        ALLOCATE(table_coor_func(Npartitions))
+
+        do i_step = 1, Npartitions
+            !harmonic part 
+            r = (i_step-1)*drTable
+            
+            if( r <= params%Rcore) then 
+                table_coor_func(i_step) = 0.
+            else 
+                table_coor_func(i_step) = twobody_corr( r )
+
+            end if 
+        end do   
+    end subroutine
+
 
     !####################################################
     !#           Generate Initial Configuration         #
@@ -145,7 +183,7 @@ module HS_puregas
             !check there's not hard core crossing with the previously generated atoms
             regen = check_hcore_crosses(R)
                     end do
-            end subroutine 
+    end subroutine 
     !####################################################
 
     !####################################################
@@ -194,7 +232,10 @@ module HS_puregas
         real*8, dimension(:,:), intent(in) :: R
         integer :: i_atom,j_atom
         integer :: Natoms, DIM
+        integer :: index
+        real*8  :: frac,remainder
         real*8  :: dist, u,x
+        real*8  :: vers1,vers2
 
         Natoms = size(R,1); DIM = size(R,2)
         u = 0.
@@ -203,7 +244,16 @@ module HS_puregas
         do i_atom = 1, Natoms -1 
             do j_atom = i_atom + 1, Natoms
                 dist = norm2(R(i_atom,:)-R(j_atom,:))
-                u    = u + 2*dlog(twobody_corr(dist))
+                !exact method 
+                u = u + 2*dlog(twobody_corr(dist))
+                
+                !tabular method 
+                ! frac  = dist/drTable
+                ! index = floor(frac)
+                ! remainder = frac - index
+                ! u = u + 2 * dlog( (1.-remainder)*table_coor_func(index)   + &
+                !                       remainder *table_coor_func(index+1))    
+                
             end do
         end do
 #endif
@@ -364,7 +414,6 @@ module HS_puregas
             TWF_harm(3,i_step) = harmonic_GSdoubleprime(r)
         end do   
     end subroutine
-
 
     !####################################################
     !#             Diffuse the particles                #

@@ -23,6 +23,7 @@
 
 
 module iofile
+    Use, intrinsic :: iso_fortran_env, Only : iostat_end
     implicit none
    
 
@@ -30,8 +31,7 @@ module iofile
     integer,private           :: IERROR
     character(len=100),private :: ioerrmsg
     
-    integer          ,private :: N_lines
-    integer,parameter,private :: max_filename_lenght = 30
+    integer,parameter,private :: max_filename_lenght = 50
     integer,parameter,private :: max_dataname_lenght = 100
     integer,parameter,private :: max_n_args = 5, max_args_len = 30
     integer,parameter,private :: max_infile_lines = 100
@@ -60,10 +60,10 @@ module iofile
     !####################################################
     !                    Open Inputfile
     !####################################################
-    subroutine io_open(input_filename)
-        Use, intrinsic :: iso_fortran_env, Only : iostat_end
-        implicit none
+    subroutine io_open(input_filename,N_lines)
         
+        implicit none
+        integer,optional :: N_lines
         character(*), intent(in) :: input_filename
         filename = input_filename
         open(FID,file=input_filename,status="old",action= "read")
@@ -71,10 +71,10 @@ module iofile
         IERROR = 0
         N_lines = 0
         do while (IERROR == 0)
+            read(FID,*,iostat=IERROR)
             Select Case(IERROR)
             Case(0)
                 N_lines = N_lines + 1
-                read(FID,*,iostat=IERROR)
             Case(iostat_end) 
                 exit
             Case Default
@@ -90,7 +90,6 @@ module iofile
     !###################################################
     !#           Read Parameters Names                 #
     !###################################################
-
     subroutine read_parameters_names()
         use strings, only:parse,value,compact
         Use, intrinsic :: iso_fortran_env, Only : iostat_end

@@ -48,11 +48,13 @@ module VMC
         type(VMC_results),intent(out)       :: results
         real*8  :: E
         real*8  :: c1
+        real*8  :: difference
         integer :: COUNTER = 0
         
         allocate(walker(Natoms,DIM,2))
         allocate(density_profile(NdensProfileSteps))
         call init_parameters(params) !initialize the simulation parameters
+        call gen_TWF_tables(TWFNPartitions)
         call init_random_seed()
 
         call gen_initial_configuration(walker(:,:,OLD))
@@ -69,12 +71,17 @@ module VMC
                     TWF(OLD) = trial_WF(walker(:,:,OLD)) 
                     TWF(NEW) = trial_WF(walker(:,:,NEW))
 
-                    
                     !metropolis question
-                    call random_number(c1)
-                    if( dexp( 2*(TWF(NEW) - TWF(OLD))) > c1) then 
+                    difference = 2*(TWF(NEW) - TWF(OLD))
+                    if (difference > 0) then !new wavefunction greater than old 
                         OLD = 3 - OLD; NEW = 3 - NEW !swap NEW <--> OLD
                         Nacceptances = Nacceptances + 1
+                    else
+                        call random_number(c1)
+                        if( exp(difference) > c1 ) then 
+                            OLD = 3 - OLD; NEW = 3 - NEW !swap NEW <--> OLD
+                            Nacceptances = Nacceptances + 1
+                        end if 
                     end if
                 else 
                     continue
@@ -105,6 +112,7 @@ module VMC
         end if 
 
         deallocate(walker);deallocate(density_profile)
+        call free_TWF_tables()
     end subroutine 
     !################################################################
 

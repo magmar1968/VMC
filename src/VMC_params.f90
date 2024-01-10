@@ -88,7 +88,8 @@ subroutine input(filename)
 
     
     character(*), intent(in) :: filename
-    call io_open(input_filename = filename)
+    integer :: N_lines
+    call io_open(input_filename = filename,N_lines = N_lines )
 
     !read MCparams
     call read_data("NMCsteps",NMCsteps)
